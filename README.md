@@ -2,13 +2,17 @@
 
 ## MCQ Studio
 
-A photo-to-chat MCQ study assistant has been added in the [mcq-chat folder](./mcq-chat/).
+The MCQ Studio photo-to-chat website is live:
+
+**https://mcq-photo-chat-api.shachindeury24.workers.dev/**
+
+Source code is in [mcq-chat/](./mcq-chat/).
 
 - Website source: [mcq-chat/index.html](./mcq-chat/index.html)
 - Setup guide: [mcq-chat/README.md](./mcq-chat/README.md)
 - Cloudflare API Worker source: [mcq-chat/worker/worker.js](./mcq-chat/worker/worker.js)
 
-Enable GitHub Pages for this repository (main branch, root folder), then open:
-https://sd201826.github.io/Free-upload/mcq-chat/
+To activate AI replies, add an encrypted Cloudflare Worker secret named `OPENAI_API_KEY` to the `mcq-photo-chat-api` Worker. Never commit your key to GitHub.
 
-Add your OpenAI API key to the Cloudflare Worker as the encrypted secret OPENAI_API_KEY. Never commit the key to GitHub.
+GitHub Pages can also be enabled under Settings → Pages (main branch, root folder) to serve the source website at:
+https://sd201826.github.io/Free-upload/mcq-chat/
