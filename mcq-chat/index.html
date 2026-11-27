@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090e18">
+<meta name="description" content="MCQ Studio — turn question photos into clear, explained answers.">
+<title>MCQ Studio</title><link rel="stylesheet" href="styles.css"><script defer src="app.js"></script>
+</head>
+<body>
+<div class="app-shell" id="appShell">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">✦</div><div><strong>MCQ Studio</strong><span>PHOTO STUDY DESK</span></div></div>
+  <button class="new-chat-button" id="newChatBtn"><b>＋</b> New chat <kbd>Ctrl K</kbd></button>
+  <div class="sidebar-label">YOUR CHATS <span id="chatCount">0</span></div>
+  <nav class="chat-list" id="chatList" aria-label="Saved chats"></nav>
+  <div class="sidebar-bottom"><div class="local-note"><i></i> Chats saved in this browser</div><button class="settings-link" id="settingsBtn">⚙ Settings & connection</button><div class="sidebar-version">MCQ STUDIO <span>v1.0</span></div></div>
+</aside>
+<main class="main-panel">
+  <header class="topbar">
+    <button class="mobile-menu" id="mobileMenuBtn" aria-label="Open navigation">☰</button>
+    <div class="topbar-location"><span class="sparkle">✦</span> Study workspace <span class="divider">/</span> <span id="topbarChatName">New chat</span></div>
+    <div class="topbar-right"><div class="connection-pill checking" id="connectionPill"><i></i><span id="connectionText">Checking API</span></div><button class="icon-button" id="topSettingsBtn" aria-label="Settings">⚙</button></div>
+  </header>
+  <section class="chat-toolbar">
+    <div class="chat-heading"><div class="eyebrow">YOUR SELECTED CHAT</div><h1 id="activeChatTitle">New chat</h1><p>Upload a question photo or ask something below.</p></div>
+    <div class="toolbar-controls">
+      <label class="control-wrap"><span>MODE</span><select id="modeSelect"><option value="mcq">MCQ tutor</option><option value="explain">Explain concept</option><option value="transcribe">Read text</option></select></label>
+      <label class="control-wrap model-wrap"><span>MODEL</span><select id="modelSelect"><option value="gpt-6-luna">GPT-6 Luna · economical</option><option value="gpt-6.1-terra">GPT-6.1 Terra · vision</option><option value="gpt-6.2-sol">GPT-6.2 Sol · balanced</option></select></label>
+    </div>
+  </section>
+  <section class="conversation-area">
+    <div class="welcome-view" id="welcomeView">
+      <div class="welcome-symbol">✦</div><div class="eyebrow">YOUR AI STUDY PARTNER</div>
+      <h2>One photo.<br><span>Clear understanding.</span></h2>
+      <p class="welcome-copy">Drop in a question sheet, screenshot, or textbook photo. MCQ Studio can read the questions, explain the choices, and help you study.</p>
+      <button class="upload-zone" id="welcomeUpload" type="button"><span class="upload-icon">↑</span><strong>Choose a question photo</strong><small>or drag and drop it here · PNG, JPG, WEBP, GIF</small></button>
+      <div class="quick-prompts"><span class="quick-label">TRY A MODE</span>
+        <button class="quick-prompt" data-mode="mcq" data-prompt="Read this photo and solve each practice MCQ. Give the correct option and a short explanation.">Solve MCQs ↗</button>
+        <button class="quick-prompt" data-mode="explain" data-prompt="Explain the topic in this image in simple words, then show how to approach the questions.">Explain the topic ↗</button>
+        <button class="quick-prompt" data-mode="transcribe" data-prompt="Read and transcribe the visible questions and options from this image.">Read the text ↗</button>
+      </div>
+    </div>
+    <div class="messages hidden" id="messages" aria-live="polite"></div>
+  </section>
+  <footer class="composer-area">
+    <div class="attachment-preview hidden" id="attachmentPreview"><img id="attachmentThumb" alt="Selected image preview"><div><strong id="attachmentName">question.jpg</strong><small>Ready to send</small></div><button id="removeAttachment" aria-label="Remove image">×</button></div>
+    <div class="composer-box"><textarea id="messageInput" rows="1" placeholder="Ask about a question, or upload a photo..." aria-label="Message"></textarea>
+      <div class="composer-actions"><div class="composer-left"><button class="attach-button" id="attachBtn">＋ Add photo</button><span class="composer-hint">Your upload goes to the selected chat</span></div><button class="send-button" id="sendBtn"><span>Send</span> <b>→</b></button></div>
+    </div>
+    <div class="disclaimer">AI can make mistakes. Check the explanation and use this as a study aid. API usage may incur charges.</div>
+  </footer>
+</main></div>
+<input class="hidden" id="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+<dialog class="settings-dialog" id="settingsDialog">
+  <form method="dialog" class="dialog-top"><div><div class="eyebrow">CONFIGURATION</div><h2>Settings & connection</h2></div><button class="dialog-close" aria-label="Close settings">×</button></form>
+  <div class="settings-content">
+    <label class="setting-label" for="endpointInput">Cloudflare Worker endpoint</label><input id="endpointInput" class="setting-input" type="url" spellcheck="false">
+    <p class="setting-help">This endpoint securely forwards your image and chat text to the OpenAI API.</p><button class="primary-action" id="saveEndpointBtn" type="button">Save endpoint</button>
+    <div class="setting-divider"></div>
+    <div class="secret-card"><div class="secret-icon">⌑</div><div><strong>OpenAI API key</strong><p>Your key is not stored in this website. Add it as a Cloudflare Worker secret named <code>OPENAI_API_KEY</code>.</p></div></div>
+    <a class="docs-link" href="https://dash.cloudflare.com/" target="_blank" rel="noreferrer">Open Cloudflare Dashboard ↗</a>
+    <div class="setting-divider"></div>
+    <div class="settings-status" id="settingsStatus"><i class="status-dot"></i><div><strong id="settingsStatusTitle">Checking connection…</strong><p id="settingsStatusText">Testing the Worker endpoint.</p></div></div>
+    <p class="privacy-note">Chat text is saved in this browser only. Image files are sent with the current request and are not saved in chat history.</p>
+  </div>
+</dialog>
+</body></html>
