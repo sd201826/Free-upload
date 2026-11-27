@@ -12,7 +12,9 @@ Source code is in [mcq-chat/](./mcq-chat/).
 - Setup guide: [mcq-chat/README.md](./mcq-chat/README.md)
 - Cloudflare API Worker source: [mcq-chat/worker/worker.js](./mcq-chat/worker/worker.js)
 
-To activate AI replies, add an encrypted Cloudflare Worker secret named `OPENAI_API_KEY` to the `mcq-photo-chat-api` Worker. Never commit your key to GitHub.
+To activate AI replies, add an encrypted Cloudflare Worker secret named `OPENAI_API_KEY` to the `mcq-photo-chat-api` Worker. The app also requires a private access code, which is not stored in this repository. Never commit secrets to GitHub.
 
-GitHub Pages can also be enabled under Settings → Pages (main branch, root folder) to serve the source website at:
+API usage is billed separately from ChatGPT; have a parent or guardian manage the API key and billing.
+
+GitHub Pages can optionally be enabled under Settings → Pages (main branch, root folder) to serve the source website at:
 https://sd201826.github.io/Free-upload/mcq-chat/
