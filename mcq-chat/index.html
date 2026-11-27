@@ -53,10 +53,10 @@
 <dialog class="settings-dialog" id="settingsDialog">
   <form method="dialog" class="dialog-top"><div><div class="eyebrow">CONFIGURATION</div><h2>Settings & connection</h2></div><button class="dialog-close" aria-label="Close settings">×</button></form>
   <div class="settings-content">
-    <label class="setting-label" for="endpointInput">Cloudflare Worker endpoint</label><input id="endpointInput" class="setting-input" type="url" spellcheck="false">
+    <label class="setting-label" for="endpointInput">Cloudflare Worker endpoint</label><input id="endpointInput" class="setting-input" type="url" spellcheck="false"><label class="setting-label access-label" for="accessTokenInput">Private app access code</label><input id="accessTokenInput" class="setting-input" type="password" autocomplete="current-password" spellcheck="false" placeholder="Paste the private code shared with you">
     <p class="setting-help">This endpoint securely forwards your image and chat text to the OpenAI API.</p><button class="primary-action" id="saveEndpointBtn" type="button">Save endpoint</button>
     <div class="setting-divider"></div>
-    <div class="secret-card"><div class="secret-icon">⌑</div><div><strong>OpenAI API key</strong><p>Your key is not stored in this website. Add it as a Cloudflare Worker secret named <code>OPENAI_API_KEY</code>.</p></div></div>
+    <div class="secret-card"><div class="secret-icon">⌑</div><div><strong>OpenAI API key</strong><p>Your OpenAI key is never stored in this website. Add it as the encrypted Cloudflare Worker secret <code>OPENAI_API_KEY</code>.</p></div></div>
     <a class="docs-link" href="https://dash.cloudflare.com/" target="_blank" rel="noreferrer">Open Cloudflare Dashboard ↗</a>
     <div class="setting-divider"></div>
     <div class="settings-status" id="settingsStatus"><i class="status-dot"></i><div><strong id="settingsStatusTitle">Checking connection…</strong><p id="settingsStatusText">Testing the Worker endpoint.</p></div></div>
