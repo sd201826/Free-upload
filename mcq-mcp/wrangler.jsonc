@@ -1,0 +1,14 @@
+{
+  "name": "mcq-mcp-server",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-28",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "MCQ_STORE",
+      "id": "19119137bd234077853ba19b3ffdc0fd"
+    }
+  ]
+}
