@@ -1,14 +1,14 @@
 # MCQ Studio MCP
 
-A Cloudflare Worker that exposes an authenticated Streamable HTTP MCP server and a small question-bank website. It does not call an AI API and requires no OpenAI API key.
+A Cloudflare Worker that serves a question-bank website and an authenticated Streamable HTTP MCP server. It does not call an AI API and does not require an OpenAI API key.
 
-## Endpoints
+## Deployed endpoints
 
-- Website: `/`
-- Health: `/health`
-- MCP: `/mcp`
-- OAuth authorization server metadata: `/.well-known/oauth-authorization-server`
-- Protected resource metadata: `/.well-known/oauth-protected-resource/mcp`
+- Website: https://mcq-mcp-server.shachindeury24.workers.dev/
+- Health: https://mcq-mcp-server.shachindeury24.workers.dev/health
+- MCP: https://mcq-mcp-server.shachindeury24.workers.dev/mcp
+- OAuth authorization-server metadata: https://mcq-mcp-server.shachindeury24.workers.dev/.well-known/oauth-authorization-server
+- OAuth protected-resource metadata: https://mcq-mcp-server.shachindeury24.workers.dev/.well-known/oauth-protected-resource/mcp
 
 ## MCP tools
 
@@ -20,14 +20,36 @@ A Cloudflare Worker that exposes an authenticated Streamable HTTP MCP server and
 - `delete_mcq`
 - `mcq_stats`
 
+ChatGPT can read a photo in the conversation, extract the MCQ text and choices, reason about the answer, then call these tools to save or retrieve the question bank. The server stores structured data; it does not perform OCR or host a language model.
+
 ## Authentication
 
-The Worker uses OAuth 2.1 authorization code + PKCE (S256), dynamic client registration, ChatGPT Client ID Metadata Documents, and a branded consent page. The user signs in using the Worker secret `APP_ACCESS_TOKEN`. The MCP client is a public client and does not receive a client secret; it uses PKCE as required for public OAuth clients.
+The Worker implements OAuth authorization-code flow with PKCE (S256), dynamic client registration, ChatGPT Client ID Metadata Documents, a consent screen, bearer-token validation, access-token expiry, and refresh-token rotation.
 
-## Deploy
+ChatGPT is a public OAuth client and can identify itself using a client ID metadata document or dynamic registration. A client secret is not needed for the public-client PKCE flow. The user signs in on the MCQ Studio consent page using the Worker secret `APP_ACCESS_TOKEN`.
 
-Create a Workers KV namespace, bind it as `MCQ_STORE`, and deploy this folder with Wrangler. Add `APP_ACCESS_TOKEN` as a Worker secret. Do not put the access code in GitHub. The deployed instance uses a private KV namespace.
+## Required one-time Cloudflare setup
 
-## AI behavior
+The Worker has been deployed and its `workers.dev` subdomain is enabled. The encrypted login secret has not been added yet.
 
-The MCP server stores and returns structured MCQ data. ChatGPT or another connected model reads uploaded images, transcribes questions, solves them, and calls the tools. No model is embedded in this Worker. The website is a question-bank manager and does not perform OCR.
+1. Open Cloudflare Dashboard → Workers & Pages → `mcq-mcp-server`.
+2. Open Settings → Variables and Secrets → Add → Secret.
+3. Name: `APP_ACCESS_TOKEN`.
+4. Value: choose a long, private access code of your own.
+5. Save the secret. If Cloudflare asks, deploy the Worker again.
+
+Never commit the access code to GitHub. Use the same code on the website's login page and on the OAuth consent page.
+
+## Cloudflare KV
+
+The `MCQ_STORE` binding is configured and points to the Cloudflare KV namespace created for this project. MCQ records, OAuth clients, short-lived authorization codes, access tokens and refresh tokens are stored there with expiry settings where applicable.
+
+## Deploy from source
+
+This folder includes `worker.js`, `index.html`, and `wrangler.jsonc`. Deploy with Wrangler after installing its dependencies in a normal Cloudflare Workers environment. The current live Worker was uploaded directly through the Cloudflare API.
+
+## Important plan limitation
+
+The server can be hosted independently, but ChatGPT custom MCP connection availability depends on the ChatGPT plan and workspace permissions. The website can still be used as a question-bank manager after the access secret is configured.
+
+No OpenAI API key is used or stored by this project.
