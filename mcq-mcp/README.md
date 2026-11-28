@@ -19,8 +19,11 @@ A Cloudflare Worker that serves a question-bank website and an authenticated Str
 - `check_mcq_answer`
 - `delete_mcq`
 - `mcq_stats`
+- `list_mcq_images`
+- `read_mcq_image`
+- `delete_mcq_image`
 
-ChatGPT can read a photo in the conversation, extract the MCQ text and choices, reason about the answer, then call these tools to save or retrieve the question bank. The server stores structured data; it does not perform OCR or host a language model.
+ChatGPT can read a photo in the conversation, extract the MCQ text and choices, reason about the answer, then call these tools to save or retrieve the question bank. The server stores structured data and private uploaded question photos. The website uploads images to Cloudflare KV. ChatGPT can call `list_mcq_images` followed by `read_mcq_image`; the MCP server returns the photo as MCP image content so ChatGPT can visually inspect it. The server does not perform OCR or host a language model.
 
 ## Authentication
 
@@ -50,6 +53,6 @@ This folder includes `worker.js`, `index.html`, and `wrangler.jsonc`. Deploy wit
 
 ## Important plan limitation
 
-The server can be hosted independently, but ChatGPT custom MCP connection availability depends on the ChatGPT plan and workspace permissions. The website can still be used as a question-bank manager after the access secret is configured.
+The server can be hosted independently, but ChatGPT custom MCP connection availability depends on the ChatGPT plan and workspace permissions. The website can be used as a question-bank manager and private photo uploader after the access secret is configured. In ChatGPT, the user must explicitly invoke the connected MCQ Studio app to fetch and inspect an uploaded image; the website cannot inject a file into an already-open ChatGPT conversation.
 
 No OpenAI API key is used or stored by this project.
