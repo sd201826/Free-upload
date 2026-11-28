@@ -2,32 +2,28 @@
 
 ## MCQ Studio — Cloudflare MCP server
 
-The MCQ Studio Worker has been uploaded to Cloudflare and its `workers.dev` hostname is enabled.
+The MCQ Studio Worker and photo bridge are deployed on Cloudflare. Its `workers.dev` hostname is enabled and the live deployment is serving the latest GitHub photo-bridge source.
 
 - Website: https://mcq-mcp-server.shachindeury24.workers.dev/
 - MCP endpoint: https://mcq-mcp-server.shachindeury24.workers.dev/mcp
 - Health endpoint: https://mcq-mcp-server.shachindeury24.workers.dev/health
 - Source: [mcq-mcp/](./mcq-mcp/)
 
-### Setup still required
+### Sign in
 
-The deployed Worker currently has **no `APP_ACCESS_TOKEN` secret configured**. As a result, its website login and OAuth sign-in cannot be used yet.
+The encrypted Cloudflare Worker secret `APP_ACCESS_TOKEN` is configured. Enter the private code chosen for that secret when signing in to the website or approving its OAuth consent screen. Cloudflare will not display the original secret again. If the code has been lost, replace it with a new private value in **Workers & Pages → mcq-mcp-server → Settings → Variables and Secrets**, then redeploy if requested.
 
-In Cloudflare Dashboard:
+Never commit the access code to GitHub or share it publicly. It is a login code, not an OpenAI API key.
 
-1. Open **Workers & Pages** → **mcq-mcp-server**.
-2. Open **Settings** → **Variables and Secrets** → **Add** → **Secret**.
-3. Set the name to `APP_ACCESS_TOKEN`.
-4. Choose a long private access code and save it as a secret.
-5. Redeploy if Cloudflare asks.
+### Photo bridge
 
-Use that same code to sign in to the MCQ Studio website and its OAuth consent page. Do not add the code to GitHub or share it publicly. It is a login code, not an OpenAI API key.
+The live Worker includes a private photo-upload interface and MCP image tools:
 
-### Photo upload status
+- `list_mcq_images` lists uploaded photos.
+- `read_mcq_image` returns a selected photo as MCP image content for ChatGPT to inspect.
+- `delete_mcq_image` deletes an uploaded photo.
 
-The latest GitHub source in [mcq-mcp/](./mcq-mcp/) now includes a private photo-upload interface and MCP image tools (`list_mcq_images`, `read_mcq_image`, and `delete_mcq_image`). **That newer image update has not been deployed to Cloudflare** because the update request was blocked. The live Worker is still the earlier question-bank version.
-
-When the updated source is deployed, ChatGPT can retrieve an uploaded image through `read_mcq_image` and inspect it in the connected conversation. The website cannot directly inject an image into an already-open ChatGPT chat.
+Image listing and image reading use read access; uploading and deleting photos require write access. The website cannot directly inject an image into an already-open ChatGPT conversation; a connected ChatGPT app must call the MCP image tool.
 
 ### No OpenAI API key
 
