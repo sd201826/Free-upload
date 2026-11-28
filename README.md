@@ -1,20 +1,31 @@
 # Free-upload
 
-## MCQ Studio
+## MCQ Studio — new MCP server
 
-The MCQ Studio photo-to-chat website is live:
+The new MCQ Studio question-bank website and authenticated MCP endpoint are deployed on Cloudflare:
 
-**https://mcq-photo-chat-api.shachindeury24.workers.dev/**
+- **Website:** https://mcq-mcp-server.shachindeury24.workers.dev/
+- **MCP endpoint:** https://mcq-mcp-server.shachindeury24.workers.dev/mcp
+- **Health:** https://mcq-mcp-server.shachindeury24.workers.dev/health
+- **Source and setup:** [mcq-mcp/](./mcq-mcp/)
 
-Source code is in [mcq-chat/](./mcq-chat/).
+The new server stores MCQ questions in Cloudflare KV and exposes MCP tools for saving, searching, listing, retrieving, checking, and deleting questions. ChatGPT supplies image reading and reasoning when a compatible ChatGPT MCP connection is available. **The new server does not require an OpenAI API key.**
 
-- Website source: [mcq-chat/index.html](./mcq-chat/index.html)
-- Setup guide: [mcq-chat/README.md](./mcq-chat/README.md)
-- Cloudflare API Worker source: [mcq-chat/worker/worker.js](./mcq-chat/worker/worker.js)
+### One-time Cloudflare setup still required
 
-To activate AI replies, add an encrypted Cloudflare Worker secret named `OPENAI_API_KEY` to the `mcq-photo-chat-api` Worker. The app also requires a private access code, which is not stored in this repository. Never commit secrets to GitHub.
+The Worker needs one encrypted secret before its website login and OAuth consent flow can accept sign-ins:
 
-API usage is billed separately from ChatGPT; have a parent or guardian manage the API key and billing.
+1. Open Cloudflare Dashboard → Workers & Pages → `mcq-mcp-server`.
+2. Open Settings → Variables and Secrets → Add → Secret.
+3. Set the variable name to `APP_ACCESS_TOKEN` and choose your own long private access code.
+4. Save it as a secret and redeploy if Cloudflare asks.
 
-GitHub Pages can optionally be enabled under Settings → Pages (main branch, root folder) to serve the source website at:
-https://sd201826.github.io/Free-upload/mcq-chat/
+Do not put this access code in GitHub or share it publicly. This is the password you enter into the MCQ Studio website and OAuth consent page. It is **not** an OpenAI API key.
+
+### Legacy photo-chat app
+
+The older API-based photo-chat demo is still in [mcq-chat/](./mcq-chat/) and uses the separate `mcq-photo-chat-api` Worker. It requires an OpenAI API key and is not the new MCP server. Use the new `mcq-mcp` project for the no-OpenAI-key question-bank/MCP setup.
+
+## GitHub Pages
+
+The source files can also be viewed on GitHub Pages, but the interactive website and authenticated API need the Cloudflare Worker deployment.
