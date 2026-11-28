@@ -65,11 +65,18 @@ const TOOLS=[
  {name:"get_mcq",description:"Retrieve one saved MCQ by ID.",inputSchema:{type:"object",properties:{id:{type:"string"}},required:["id"]}},
  {name:"check_mcq_answer",description:"Compare a selected option with the answer saved for an MCQ. This checks stored data; it does not independently solve the question.",inputSchema:{type:"object",properties:{id:{type:"string"},selected_answer:{type:"string"}},required:["id","selected_answer"]}},
  {name:"delete_mcq",description:"Delete one question from the signed-in user's question bank.",inputSchema:{type:"object",properties:{id:{type:"string"}},required:["id"]}},
- {name:"mcq_stats",description:"Get question-bank totals and subject counts.",inputSchema:{type:"object",properties:{}}}
+ {name:"mcq_stats",description:"Get question-bank totals and subject counts.",inputSchema:{type:"object",properties:{}}},
+ {name:"list_mcq_images",description:"List private question photos uploaded to the MCQ Studio website. Use this first to find the user's latest photo.",inputSchema:{type:"object",properties:{limit:{type:"integer",minimum:1,maximum:20}}}},
+ {name:"read_mcq_image",description:"Fetch one uploaded question photo as image content so the model can visually read it. Use list_mcq_images first to get the ID.",inputSchema:{type:"object",properties:{id:{type:"string"}},required:["id"]}},
+ {name:"delete_mcq_image",description:"Delete an uploaded question photo from the user's private image store.",inputSchema:{type:"object",properties:{id:{type:"string"}},required:["id"]}}
 ];
 async function allQuestions(e,sub){const l=await e.MCQ_STORE.list({prefix:"q:"+sub+":",limit:1000}),a=[];for(const k of l.keys){const q=await get(e,k.name);if(q)a.push(q)}return a.sort((x,y)=>y.created_at-x.created_at)}
+async function allImages(e,sub){const l=await e.MCQ_STORE.list({prefix:"imgmeta:"+sub+":",limit:100}),a=[];for(const k of l.keys){const v=await get(e,k.name);if(v)a.push(v)}return a.sort((x,y)=>y.created_at-x.created_at)}
 async function callTool(n,a,auth,e){
  const sub=auth.sub||OWNER;
+ if(n==="list_mcq_images")return{images:(await allImages(e,sub)).slice(0,Math.max(1,Math.min(20,Number(a.limit)||10)))};
+ if(n==="read_mcq_image"){const id=clean(a.id,80);if(!id)throw Error("An image ID is required.");const meta=await get(e,"imgmeta:"+sub+":"+id),data=await e.MCQ_STORE.get("imgdata:"+sub+":"+id);if(!meta||!data)throw Error("Image not found or expired.");return{_mcpImage:true,id,name:meta.name,mimeType:meta.mimeType,data};}
+ if(n==="delete_mcq_image"){const id=clean(a.id,80);if(!id)throw Error("An image ID is required.");await e.MCQ_STORE.delete("imgmeta:"+sub+":"+id);await e.MCQ_STORE.delete("imgdata:"+sub+":"+id);return{deleted:true,id};}
  if(n==="save_mcq"){const question=clean(a.question,6000);if(!question)throw Error("Question text is required.");const q={id:rand(8),question,options:Array.isArray(a.options)?a.options.slice(0,8).map(x=>clean(x,500)).filter(Boolean):[],correct_answer:clean(a.correct_answer,300),explanation:clean(a.explanation,3000),subject:clean(a.subject,100),tags:Array.isArray(a.tags)?a.tags.slice(0,12).map(x=>clean(x,40)).filter(Boolean):[],created_at:Date.now()};await put(e,"q:"+sub+":"+q.id,q,31536000);return{message:"MCQ saved.",question:q}}
  if(["list_mcqs","search_mcqs","mcq_stats"].includes(n)){let a1=await allQuestions(e,sub);if(n==="mcq_stats"){const by={};for(const q of a1){const s=q.subject||"Uncategorised";by[s]=(by[s]||0)+1}return{total:a1.length,by_subject:by}}if(a.subject)a1=a1.filter(q=>(q.subject||"").toLowerCase()===String(a.subject).toLowerCase());if(n==="search_mcqs"&&a.query){const t=String(a.query).toLowerCase();a1=a1.filter(q=>(q.question+" "+q.options.join(" ")+" "+q.subject+" "+q.tags.join(" ")).toLowerCase().includes(t))}return{count:a1.length,questions:a1.slice(0,Math.max(1,Math.min(50,Number(a.limit)||20)))}}
  const id=clean(a.id,80);if(!id)throw Error("A question ID is required.");const key="q:"+sub+":"+id,q=await get(e,key);if(!q)throw Error("Question not found.");
@@ -86,7 +93,7 @@ async function mcp(req,e){
  if(method==="ping")return json({jsonrpc:"2.0",id,result:{}});
  if(method==="tools/list")return json({jsonrpc:"2.0",id,result:{tools:TOOLS}});
  if(method==="resources/list")return json({jsonrpc:"2.0",id,result:{resources:[]}});
- if(method==="tools/call"){const n=p.name,a=p.arguments||{},t=TOOLS.find(x=>x.name===n);if(!t)return json({jsonrpc:"2.0",id,error:{code:-32602,message:"Unknown tool"}});const read=["search_mcqs","list_mcqs","get_mcq","check_mcq_answer","mcq_stats"].includes(n);if(!read&&!auth.scopes.includes("mcq:write"))return json({jsonrpc:"2.0",id,result:{content:[{type:"text",text:"Permission denied: mcq:write scope is required."}],isError:true}});try{const d=await callTool(n,a,auth,e);return json({jsonrpc:"2.0",id,result:{content:[{type:"text",text:JSON.stringify(d)}],structuredContent:d}})}catch(err){return json({jsonrpc:"2.0",id,result:{content:[{type:"text",text:err.message||"Tool failed"}],isError:true}})}}
+ if(method==="tools/call"){const n=p.name,a=p.arguments||{},t=TOOLS.find(x=>x.name===n);if(!t)return json({jsonrpc:"2.0",id,error:{code:-32602,message:"Unknown tool"}});const read=["search_mcqs","list_mcqs","get_mcq","check_mcq_answer","mcq_stats"].includes(n);if(!read&&!auth.scopes.includes("mcq:write"))return json({jsonrpc:"2.0",id,result:{content:[{type:"text",text:"Permission denied: mcq:write scope is required."}],isError:true}});try{const d=await callTool(n,a,auth,e);if(d&&d._mcpImage){const meta={id:d.id,name:d.name,mimeType:d.mimeType};return json({jsonrpc:"2.0",id,result:{content:[{type:"text",text:"Uploaded MCQ image: "+d.name+" (ID "+d.id+")"},{type:"image",data:d.data,mimeType:d.mimeType}],structuredContent:meta}})}return json({jsonrpc:"2.0",id,result:{content:[{type:"text",text:JSON.stringify(d)}],structuredContent:d}})}catch(err){return json({jsonrpc:"2.0",id,result:{content:[{type:"text",text:err.message||"Tool failed"}],isError:true}})}}
  return json({jsonrpc:"2.0",id,error:{code:-32601,message:"Method not found"}});
 }
 async function webLogin(req,e){const d=await body(req);if(!same(String(d.code||""),e.APP_ACCESS_TOKEN||""))return json({error:"Incorrect access code."},401);const t=rand(32);await put(e,"web:"+t,{sub:OWNER,exp:exp(43200)},43200);return json({token:t,expires_in:43200})}
@@ -95,6 +102,11 @@ async function webQuestions(req,e){const a=await webAuth(req,e);if(!a)return jso
  if(req.method==="GET"){let qs=await allQuestions(e,a.sub||OWNER),term=(u.searchParams.get("q")||"").toLowerCase();if(term)qs=qs.filter(q=>(q.question+" "+q.subject).toLowerCase().includes(term));return json({questions:qs})}
  if(req.method==="POST"){const d=await body(req),question=clean(d.question,6000);if(!question)return json({error:"Question text is required."},400);const q={id:rand(8),question,options:Array.isArray(d.options)?d.options.slice(0,8).map(x=>clean(x,500)).filter(Boolean):[],correct_answer:clean(d.correct_answer,300),explanation:clean(d.explanation,3000),subject:clean(d.subject,100),tags:[],created_at:Date.now()};await put(e,"q:"+(a.sub||OWNER)+":"+q.id,q,31536000);return json({question:q},201)}
  if(req.method==="DELETE"){const id=u.searchParams.get("id");if(!id)return json({error:"Question ID required."},400);await e.MCQ_STORE.delete("q:"+(a.sub||OWNER)+":"+id);return json({deleted:true})}
+ return json({error:"Method not allowed."},405)}
+async function webImages(req,e){const a=await webAuth(req,e);if(!a)return json({error:"Sign in again."},401);const sub=a.sub||OWNER,u=new URL(req.url);
+ if(req.method==="GET")return json({images:await allImages(e,sub)});
+ if(req.method==="POST"){const d=await body(req),name=clean(d.name,180)||"question-photo",mime=String(d.mimeType||"");const data=String(d.data||"");if(!["image/jpeg","image/png","image/webp"].includes(mime))return json({error:"Only JPG, PNG, and WEBP images are supported."},400);if(!/^[A-Za-z0-9+/]+={0,2}$/.test(data)||data.length>2800000)return json({error:"Photo must be under about 2 MB."},400);const id=rand(8),meta={id,name,mimeType:mime,size:Math.floor(data.length*.75),created_at:Date.now()};await put(e,"imgmeta:"+sub+":"+id,meta,2592000);await e.MCQ_STORE.put("imgdata:"+sub+":"+id,data,{expirationTtl:2592000});return json({image:meta},201)}
+ if(req.method==="DELETE"){const id=u.searchParams.get("id");if(!id)return json({error:"Image ID required."},400);await e.MCQ_STORE.delete("imgmeta:"+sub+":"+id);await e.MCQ_STORE.delete("imgdata:"+sub+":"+id);return json({deleted:true})}
  return json({error:"Method not allowed."},405)}
 export default {async fetch(req,e){
  const u=new URL(req.url),p=u.pathname;
@@ -110,5 +122,6 @@ export default {async fetch(req,e){
  if(p==="/mcp"&&req.method==="POST")return mcp(req,e);
  if(p==="/api/site/login"&&req.method==="POST")return webLogin(req,e);
  if(p==="/api/mcqs")return webQuestions(req,e);
+ if(p==="/api/images")return webImages(req,e);
  return json({error:"Not found"},404);
 }};
